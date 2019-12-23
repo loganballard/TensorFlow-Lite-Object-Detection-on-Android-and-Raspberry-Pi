@@ -206,7 +206,7 @@ while True:
                 pic_path = args.imgdir + dt_str + '.jpg'
                 cv2.imwrite(pic_path, new_screencap)
                 num_screenshots += 1
-                slack_messaging.send_picture_to_space(pic_path, scores[i])
+                slack_messaging.send_picture_to_space(pic_path, scores[i], object_name)
 
     # Draw framerate in corner of frame
     cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)

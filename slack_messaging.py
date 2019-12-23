@@ -21,7 +21,7 @@ def upload_image_to_imgur(img_path: str):
     return res.get('link', 'https://docs.microsoft.com/en-us/windows/win32/uxguide/images/mess-error-image4.png')
 
 
-def send_picture_to_space(img_path: str, confidence: str, label: str):
+def send_picture_to_space(img_path: str, confidence: str = '70', label: str = 'bird'):
     link = upload_image_to_imgur(img_path)
     attachments = [{"title": label, "image_url": link}]
     response = slack_client.chat_postMessage(
@@ -30,5 +30,8 @@ def send_picture_to_space(img_path: str, confidence: str, label: str):
         username='BirdWatcherBot',
         attachments=attachments
     )
-    assert response["ok"]
+    if response["ok"]:
+        os.remove(img_path)
+    else:
+        print('something went wrong!')
     print(response)
