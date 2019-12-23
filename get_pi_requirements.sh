@@ -31,3 +31,4 @@ pip3 install tensorflow-1.14.0-cp35-none-linux_armv7l.whl
 rm tensorflow-1.14.0-cp35-none-linux_armv7l.whl
 fi
 
+pip3 install slackclient python-dotenv imgurpython

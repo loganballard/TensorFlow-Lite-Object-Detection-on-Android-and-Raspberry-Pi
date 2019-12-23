@@ -22,6 +22,8 @@ import sys
 import time
 from threading import Thread
 import importlib.util
+from datetime import datetime
+import slack_messaging
 
 # If tensorflow is not installed, import interpreter from tflite_runtime, else import from regular tensorflow
 pkg = importlib.util.find_spec('tensorflow')
@@ -85,6 +87,9 @@ parser.add_argument('--threshold', help='Minimum confidence threshold for displa
 parser.add_argument('--resolution', help='Desired webcam resolution in WxH. If the webcam does not support the resolution entered, errors may occur.',
                     default='1280x720')
 
+parser.add_argument('--imgdir', help='The Directory where the screenshotted images are saved.',
+                    default= os.getcwd() + os.path.sep + 'screenshots' + os.path.sep)
+
 args = parser.parse_args()
 
 MODEL_NAME = args.modeldir
@@ -92,6 +97,7 @@ GRAPH_NAME = args.graph
 LABELMAP_NAME = args.labels
 
 min_conf_threshold = args.threshold
+min_screenshot_conf_threshold = 0.7
 
 resW, resH = args.resolution.split('x')
 imW, imH = int(resW), int(resH)
@@ -136,6 +142,8 @@ freq = cv2.getTickFrequency()
 # Initialize video stream
 videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
 time.sleep(1)
+
+num_screenshots = 0
 
 #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
 while True:
@@ -186,6 +194,19 @@ while True:
             label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
             cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
             cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
+
+            if scores[i] > min_screenshot_conf_threshold and object_name in ('cell phone', 'tv', 'remote', 'person'):
+                cur_date = datetime.now()
+                dt_str = ''.join([str(x)+'_' for x in (cur_date.year, cur_date.month, cur_date.day)]) + str(num_screenshots)
+                print('high score!')
+                print(scores[i])
+                # TODO - crop
+                min_screenshot_conf_threshold = scores[i]
+                new_screencap = frame[ymin:ymax, xmin:xmax]
+                pic_path = args.imgdir + dt_str + '.jpg'
+                cv2.imwrite(pic_path, new_screencap)
+                num_screenshots += 1
+                slack_messaging.send_picture_to_space(pic_path, scores[i])
 
     # Draw framerate in corner of frame
     cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
