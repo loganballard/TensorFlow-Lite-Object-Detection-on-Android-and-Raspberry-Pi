@@ -2,8 +2,6 @@ import os
 import slack
 from dotenv import load_dotenv
 from imgurpython import ImgurClient
-from pprint import pprint
-import json
 
 load_dotenv()
 
@@ -16,21 +14,6 @@ img_client_id = os.environ['IMGUR_CLIENT_ID']
 img_client_secret = os.environ['IMGUR_CLIENT_SECRET']
 
 img_client = ImgurClient(img_client_id, img_client_secret)
-
-
-def make_block(img_url: str):
-    return [{
-        "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": "look at this bird"
-        },
-        "accessory": {
-            "type": "image",
-            "image_url": img_url,
-            "alt_text": "bird"
-        }
-    }]
 
 
 def upload_image_to_imgur(img_path: str):
