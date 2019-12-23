@@ -46,11 +46,11 @@ class VideoStream:
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
-	# Variable to control when the camera is stopped
+    # Variable to control when the camera is stopped
         self.stopped = False
 
     def start(self):
-	# Start the thread that reads frames from the video stream
+    # Start the thread that reads frames from the video stream
         Thread(target=self.update,args=()).start()
         return self
 
@@ -67,11 +67,11 @@ class VideoStream:
             (self.grabbed, self.frame) = self.stream.read()
 
     def read(self):
-	# Return the most recent frame
+    # Return the most recent frame
         return self.frame
 
     def stop(self):
-	# Indicate that the camera and thread should be stopped
+    # Indicate that the camera and thread should be stopped
         self.stopped = True
 
 # Define and parse input arguments
@@ -145,8 +145,15 @@ time.sleep(1)
 
 num_screenshots = 0
 
+cur_day = datetime.now().day
+daily_min_screenshot_conf_threshold = min_screenshot_conf_threshold
+
 #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
 while True:
+
+    if cur_day == datetime.now().day:
+        daily_min_screenshot_conf_threshold = min_screenshot_conf_threshold
+        num_screenshots = 0
 
     # Start timer (for calculating frame rate)
     t1 = cv2.getTickCount()
@@ -195,18 +202,18 @@ while True:
             cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
             cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
 
-            if scores[i] > min_screenshot_conf_threshold and object_name in ('cell phone', 'tv', 'remote', 'person'):
+            if scores[i] > daily_min_screenshot_conf_threshold and object_name in ('bird', 'person'):
                 cur_date = datetime.now()
                 dt_str = ''.join([str(x)+'_' for x in (cur_date.year, cur_date.month, cur_date.day)]) + str(num_screenshots)
                 print('high score!')
                 print(scores[i])
-                # TODO - crop
                 min_screenshot_conf_threshold = scores[i]
                 new_screencap = frame[ymin:ymax, xmin:xmax]
                 pic_path = args.imgdir + dt_str + '.jpg'
                 cv2.imwrite(pic_path, new_screencap)
-                num_screenshots += 1
                 slack_messaging.send_picture_to_space(pic_path, scores[i], object_name)
+                num_screenshots += 1
+                time.sleep(10)
 
     # Draw framerate in corner of frame
     cv2.putText(frame,'FPS: {0:.2f}'.format(frame_rate_calc),(30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
